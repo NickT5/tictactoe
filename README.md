@@ -8,5 +8,11 @@ cd tictactoe
 python app.py
 ```
 
+## Demo
+![Tic Tac Toe demo](demo/demo_game.gif)
+![Tic Tac Toe demo game done](demo/demo_game_done.png)
+
+
+
 ## Future work
 Add a GUI for this game.
