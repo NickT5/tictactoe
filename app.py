@@ -1,3 +1,13 @@
+def menu():
+    choice = input('''
+----- Tic Tac Toe -----
+| 0: Play with CLI     |
+| 1: Play Toe with GUI |
+| 2: exit              |
+|----------------------|\n''')
+    return choice
+
+
 def setup_game():
     print("Initializing game...")
     board = create_board()
@@ -89,10 +99,26 @@ def show_game_result(result):
         print(f"{result} won!")
 
 
-def main():
+def tictactoe_cli():
     board, players, current_turn, next_turn = setup_game()
     game_result = main_loop(board, players, current_turn, next_turn)
     show_game_result(game_result)
+
+
+def main():
+    while True:
+        choice = menu()
+
+        # Execute chosen menu option.
+        if choice == '0':
+            tictactoe_cli()
+        elif choice == '1':
+            pass
+        elif choice == '2':
+            print("Exiting program")
+            break
+        else:
+            print("Given input is not a valid choice. Try again.")
 
 
 if __name__ == "__main__":
