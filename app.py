@@ -1,5 +1,6 @@
 import arcade
 from Player import X, O
+from math import floor
 
 # Game settings
 SCREEN_WIDTH = 600
@@ -15,7 +16,23 @@ GAME_OVER = 2
 class MyGame(arcade.Window):
     def __init__(self, width, height, title):
         super().__init__(width, height, title)
+        self.box_size = self.width / 3
+        self.current_state = None
+        self.game_result = None
+        self.board = None
+        self.players = None
+        self.current_turn = None
+        self.next_turn = None
+        self.x_list = None  # location of all X objects.
+        self.o_list = None  # location of all O objects.
+        self.center_locations = None
+
+        self.set_location(100, 100)
+        arcade.set_background_color(arcade.color.BLACK)
+
+    def setup(self):
         self.current_state = GAME_MENU
+        self.game_result = ""
         self.board = [['-', '-', '-'],
                       ['-', '-', '-'],
                       ['-', '-', '-']]
@@ -24,12 +41,9 @@ class MyGame(arcade.Window):
         self.next_turn = self.players[1]
         self.x_list = []  # location of all X objects.
         self.o_list = []  # location of all O objects.
-        self.center_locations = [(100, 500), (300, 500), (500, 500),
-                                 (100, 300), (300, 300), (500, 300),
-                                 (100, 100), (300, 100), (500, 100)]
-        self.game_result = ""
-        self.set_location(100, 100)
-        arcade.set_background_color(arcade.color.BLACK)
+        self.center_locations = [[(100, 500), (300, 500), (500, 500)],
+                                 [(100, 300), (300, 300), (500, 300)],
+                                 [(100, 100), (300, 100), (500, 100)]]
 
     def show_board_data(self):
         for row in self.board:
@@ -46,30 +60,12 @@ class MyGame(arcade.Window):
         arcade.draw_lines([(0, 400), (600, 400)], arcade.color.WHITE, 3)
 
     def get_location_clicked(self, x, y):
-        # todo refactor this. Try x/boxsize, y/boxsize
-        # First row
-        if 0 <= x < 200 and 400 <= y <= 600:
-            return 1
-        elif 200 <= x < 400 and 400 <= y <= 600:
-            return 2
-        elif 400 <= x <= 600 and 400 <= y <= 600:
-            return 3
-        # Second row
-        elif 0 <= x < 200 and 200 <= y < 400:
-            return 4
-        elif 200 <= x < 400 and 200 <= y < 400:
-            return 5
-        elif 400 <= x <= 600 and 200 <= y < 400:
-            return 6
-        # Third row
-        elif 0 <= x < 200 and 0 <= y < 200:
-            return 7
-        elif 200 <= x < 400 and 0 <= y < 200:
-            return 8
-        elif 400 <= x <= 600 and 0 <= y < 200:
-            return 9
-        else:
-            return -1
+        # Convert mouse coordinates to row col indexes for the board.
+        # Note: Coordinate (0;0) starts in bottom left corner in the arcade library.
+        # Note: it's nessecary to flip y-axis in the calculation, otherwise the row index is flipped.
+        col = floor(x / self.box_size)
+        row = floor(abs(y-self.height) / self.box_size)
+        return row, col
 
     def check_if_winner(self):
         b = self.board
@@ -95,8 +91,8 @@ class MyGame(arcade.Window):
     def is_game_done(self):
         # Game is over if there's a winner or the board is full (= a tie).
         if self.check_if_winner():
-            print(f"{self.next_turn} won!")
-            self.game_result = f"{self.next_turn} won!"
+            print(f"Player {self.next_turn} won!")
+            self.game_result = f"Player {self.next_turn} won!"
             return True
         elif self.is_board_full():
             print("It's a tie.")
@@ -125,7 +121,7 @@ class MyGame(arcade.Window):
     def draw_game_over(self):
         arcade.draw_text("Tic Tac Toe",
                          0, 400, arcade.color.WHITE, 36, width=SCREEN_WIDTH, align="center")
-        arcade.draw_text(f"Player {self.game_result}",
+        arcade.draw_text(self.game_result,
                          0, 300, arcade.color.WHITE, 30, width=SCREEN_WIDTH, align="center")
         arcade.draw_text("Press R to restart the game.",
                          0, 200, arcade.color.WHITE, 14, width=SCREEN_WIDTH, align="center")
@@ -156,23 +152,22 @@ class MyGame(arcade.Window):
 
         # Change game state when R is pressed.
         if self.current_state == GAME_OVER and symbol == arcade.key.R:
+            self.setup()
             self.current_state = GAME_MENU
 
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int):
         if self.current_state == GAME_RUNNING:
             if button == arcade.MOUSE_BUTTON_LEFT:
-                location = self.get_location_clicked(x, y)
-                print(f"({x},{y}) You clicked in {location}")
+                # Translate mouse coordinates to row, col indexes for the tic tac toe board.
+                row, col = self.get_location_clicked(x, y)
+                #print(f"({x},{y}) -> you clicked in row: {row}, col: {col}.")
 
                 # Add X or O to the correct board location if it's not filled.
-                location -= 1  # Conversion from user logic to array indexing logic.
-                row = location // 3
-                col = location % 3
                 if self.board[row][col] == 'X' or self.board[row][col] == 'O':
                     print("Box already filled! Please choose another location.")
                 else:
                     self.board[row][col] = self.current_turn
-                    cx, cy = self.center_locations[location]
+                    cx, cy = self.center_locations[row][col]
                     if self.current_turn == 'X':
                         self.x_list.append(X(cx, cy))
                     else:
@@ -293,7 +288,8 @@ def tictactoe_cli():
 
 
 def tictactoe_gui():
-    MyGame(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+    game = MyGame(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+    game.setup()
     arcade.run()  # Run game window until user exits the game.
 
 
