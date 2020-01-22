@@ -107,9 +107,11 @@ class MyGame(arcade.Window):
 
     def draw_start_menu(self):
         arcade.draw_text("Tic Tac Toe",
-                         200, 400, arcade.color.WHITE, 36, width=200, align="center")
+                         0, 400, arcade.color.WHITE, 36, width=SCREEN_WIDTH, align="center")
         arcade.draw_text("Press ENTER to play.",
-                         200, 250, arcade.color.WHITE, 14, width=200, align="center")
+                         0, 200, arcade.color.WHITE, 14, width=SCREEN_WIDTH, align="center")
+        arcade.draw_text("Press ESC or Q at any time to quit the game.",
+                         0, 150, arcade.color.WHITE, 14, width=SCREEN_WIDTH, align="center")
 
     def draw_game(self):
         self.draw_board_grid()
@@ -122,11 +124,13 @@ class MyGame(arcade.Window):
 
     def draw_game_over(self):
         arcade.draw_text("Tic Tac Toe",
-                         200, 400, arcade.color.WHITE, 36, width=200, align="center")
-        arcade.draw_text(self.game_result,
-                         200, 300, arcade.color.WHITE, 30, width=200, align="center")
+                         0, 400, arcade.color.WHITE, 36, width=SCREEN_WIDTH, align="center")
+        arcade.draw_text(f"Player {self.game_result}",
+                         0, 300, arcade.color.WHITE, 30, width=SCREEN_WIDTH, align="center")
         arcade.draw_text("Press R to restart the game.",
-                         200, 250, arcade.color.WHITE, 14, width=200, align="center")
+                         0, 200, arcade.color.WHITE, 14, width=SCREEN_WIDTH, align="center")
+        arcade.draw_text("Press ESC or Q at to exit the game.",
+                         0, 150, arcade.color.WHITE, 14, width=SCREEN_WIDTH, align="center")
 
     def on_draw(self):
         arcade.start_render()
@@ -150,6 +154,7 @@ class MyGame(arcade.Window):
         if symbol == arcade.key.ESCAPE or symbol == arcade.key.Q:
             self.close()
 
+        # Change game state when R is pressed.
         if self.current_state == GAME_OVER and symbol == arcade.key.R:
             self.current_state = GAME_MENU
 
@@ -177,7 +182,7 @@ class MyGame(arcade.Window):
                 self.show_board_data()
                 if self.is_game_done():
                     self.current_state = GAME_OVER
-                    #self.close()        # Close window if game is over.
+
 
 def menu():
     choice = input('''
@@ -219,7 +224,7 @@ def init_turns(players):
 
 
 def check_if_winner(b):
-     # todo: possible to code this more efficient by only check the rows/cols/diagonals of the last move.
+    # todo: possible to code this more efficient by only check the rows/cols/diagonals of the last move.
     is_over = False
     # Check horizontal
     for h in range(3):
@@ -289,7 +294,7 @@ def tictactoe_cli():
 
 def tictactoe_gui():
     MyGame(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
-    arcade.run()  # Run game window until user clicks on exit or game is over.
+    arcade.run()  # Run game window until user exits the game.
 
 
 def main():
