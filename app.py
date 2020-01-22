@@ -1,14 +1,21 @@
 import arcade
 from Player import X, O
 
+# Game settings
 SCREEN_WIDTH = 600
 SCREEN_HEIGHT = 600
 SCREEN_TITLE = "Tic Tac Toe"
+
+# Game states
+GAME_MENU = 0
+GAME_RUNNING = 1
+GAME_OVER = 2
 
 
 class MyGame(arcade.Window):
     def __init__(self, width, height, title):
         super().__init__(width, height, title)
+        self.current_state = GAME_MENU
         self.board = [['-', '-', '-'],
                       ['-', '-', '-'],
                       ['-', '-', '-']]
@@ -20,6 +27,7 @@ class MyGame(arcade.Window):
         self.center_locations = [(100, 500), (300, 500), (500, 500),
                                  (100, 300), (300, 300), (500, 300),
                                  (100, 100), (300, 100), (500, 100)]
+        self.game_result = ""
         self.set_location(100, 100)
         arcade.set_background_color(arcade.color.BLACK)
 
@@ -88,15 +96,22 @@ class MyGame(arcade.Window):
         # Game is over if there's a winner or the board is full (= a tie).
         if self.check_if_winner():
             print(f"{self.next_turn} won!")
+            self.game_result = f"{self.next_turn} won!"
             return True
         elif self.is_board_full():
             print("It's a tie.")
+            self.game_result = "It's a tie."
             return True
         else:
             return False
 
-    def on_draw(self):
-        arcade.start_render()
+    def draw_start_menu(self):
+        arcade.draw_text("Tic Tac Toe",
+                         200, 400, arcade.color.WHITE, 36, width=200, align="center")
+        arcade.draw_text("Press ENTER to play.",
+                         200, 250, arcade.color.WHITE, 14, width=200, align="center")
+
+    def draw_game(self):
         self.draw_board_grid()
         # Draw the X's.
         for x in self.x_list:
@@ -105,37 +120,64 @@ class MyGame(arcade.Window):
         for o in self.o_list:
             o.draw()
 
+    def draw_game_over(self):
+        arcade.draw_text("Tic Tac Toe",
+                         200, 400, arcade.color.WHITE, 36, width=200, align="center")
+        arcade.draw_text(self.game_result,
+                         200, 300, arcade.color.WHITE, 30, width=200, align="center")
+        arcade.draw_text("Press R to restart the game.",
+                         200, 250, arcade.color.WHITE, 14, width=200, align="center")
+
+    def on_draw(self):
+        arcade.start_render()
+
+        if self.current_state == GAME_MENU:
+            self.draw_start_menu()
+        elif self.current_state == GAME_RUNNING:
+            self.draw_game()
+        else:
+            self.draw_game_over()
+
     def on_update(self, delta_time: float):
         pass
 
     def on_key_release(self, symbol: int, modifiers: int):
+        # Change game state when ENTER is pressed.
+        if self.current_state == GAME_MENU and symbol == arcade.key.ENTER:
+            self.current_state = GAME_RUNNING
+
+        # Close game if ESC or q is pressed on the keyboard.
         if symbol == arcade.key.ESCAPE or symbol == arcade.key.Q:
-            pass
+            self.close()
+
+        if self.current_state == GAME_OVER and symbol == arcade.key.R:
+            self.current_state = GAME_MENU
 
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int):
-        if button == arcade.MOUSE_BUTTON_LEFT:
-            location = self.get_location_clicked(x, y)
-            print(f"({x},{y}) You clicked in {location}")
+        if self.current_state == GAME_RUNNING:
+            if button == arcade.MOUSE_BUTTON_LEFT:
+                location = self.get_location_clicked(x, y)
+                print(f"({x},{y}) You clicked in {location}")
 
-            # Add X or O to the correct board location if it's not filled.
-            location -= 1  # Conversion from user logic to array indexing logic.
-            row = location // 3
-            col = location % 3
-            if self.board[row][col] == 'X' or self.board[row][col] == 'O':
-                print("Box already filled! Please choose another location.")
-            else:
-                self.board[row][col] = self.current_turn
-                cx, cy = self.center_locations[location]
-                if self.current_turn == 'X':
-                    self.x_list.append(X(cx, cy))
+                # Add X or O to the correct board location if it's not filled.
+                location -= 1  # Conversion from user logic to array indexing logic.
+                row = location // 3
+                col = location % 3
+                if self.board[row][col] == 'X' or self.board[row][col] == 'O':
+                    print("Box already filled! Please choose another location.")
                 else:
-                    self.o_list.append(O(cx, cy))
-                self.switch_turn()
+                    self.board[row][col] = self.current_turn
+                    cx, cy = self.center_locations[location]
+                    if self.current_turn == 'X':
+                        self.x_list.append(X(cx, cy))
+                    else:
+                        self.o_list.append(O(cx, cy))
+                    self.switch_turn()
 
-            self.show_board_data()
-            if self.is_game_done():
-                self.close()        # Close window if game is over.
-
+                self.show_board_data()
+                if self.is_game_done():
+                    self.current_state = GAME_OVER
+                    #self.close()        # Close window if game is over.
 
 def menu():
     choice = input('''
@@ -247,13 +289,13 @@ def tictactoe_cli():
 
 def tictactoe_gui():
     MyGame(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
-    arcade.run()  # Run game window until user clicks on exit.
+    arcade.run()  # Run game window until user clicks on exit or game is over.
 
 
 def main():
     while True:
-        choice = menu()
-        #choice = '1'  # quicker for development
+        #choice = menu()
+        choice = '1'  # quicker for development
 
         # Execute chosen menu option.
         if choice == '0':
