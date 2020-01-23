@@ -20,7 +20,7 @@ python app.py
 ```
 
 ## Demo
-![Tic Tac Toe demo gui](demo/demo_gui.gif)
+![Tic Tac Toe demo gui](demo/demo_gui_small.gif)
 ![Tic Tac Toe demo menu](demo/demo_menu_w_cli.gif)
 ![Tic Tac Toe demo cli](demo/demo_cli.png)
 
