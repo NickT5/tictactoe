@@ -4,11 +4,16 @@ The [Arcade library](http://arcade.academy/) was used to code the graphics for t
 
 ## Run locally
 Download or git clone this repository.
-Install the necessary packages by using *requirements.txt* .
+It's recommended to create a virtual environment and install the required packages in that environment.
+I use [conda](https://docs.conda.io/en/latest/) for environment management.
 ```
 cd tictactoe
+conda create -n graphics python=3.7
+conda activate graphics
 pip install -r requirements.txt
 ```
+
+
 Play the game.
 ```
 python app.py
@@ -18,7 +23,6 @@ python app.py
 ![Tic Tac Toe demo menu](demo/demo_menu_w_cli.gif)
 ![Tic Tac Toe demo cli](demo/demo_cli.png)
 ![Tic Tac Toe demo gui](demo/demo_gui.gif)
-
 
 
 ## Future work
