@@ -48,9 +48,12 @@ class MyGame(arcade.Window):
         #                          [(100, 100), (300, 100), (500, 100)]]
 
     def get_center_locations(self, w, h):
+        """ Return a 2D list of tuples.
+        This 2D list contains the center coordinate (x, y) for each box in the board grid.
+        Input: width and height of the board grid."""
         box = int(w / 3)
         half = int(box / 2)
-        center_locations = []  # List of list of tuples.
+        center_locations = []
 
         for row in range(w-half, half - 1, -box):
             tmp = []
@@ -60,6 +63,7 @@ class MyGame(arcade.Window):
         return center_locations
 
     def show_board_data(self):
+        """ Print the board grid with X's and O's in the terminal. """
         for row in self.board:
             print(f"|{row[0]}|{row[1]}|{row[2]}|")
         print("")
@@ -68,33 +72,38 @@ class MyGame(arcade.Window):
         self.current_turn, self.next_turn = self.next_turn, self.current_turn
 
     def draw_board_grid(self, w, h, offset=0):
-        bs = w / 3
-        bs2 = bs * 2
+        """ Draw the board grid with 4 lines.
+         Input: width and height of the board grid.
+                offset is added to place the grid in the center for example (this is used in the game-over screen)."""
+        bs = w / 3    # box size
+        bs2 = bs * 2  # double box size
 
-        # Add offset
+        # Add the offset.
         w += offset
         h += offset
         bs += offset
         bs2 += offset
+        # Draw the lines.
         arcade.draw_line(bs,     offset, bs,  h,   arcade.color.WHITE, 3)  # vertical line left
         arcade.draw_line(bs2,    offset, bs2, h,   arcade.color.WHITE, 3)  # vertical line right
         arcade.draw_line(offset, bs,     w,   bs,  arcade.color.WHITE, 3)  # horizontal line top
         arcade.draw_line(offset, bs2,    w,   bs2, arcade.color.WHITE, 3)  # horizontal line bottom
-
         # arcade.draw_lines([(200, 0), (200, 600)], arcade.color.WHITE, 3)
         # arcade.draw_lines([(400, 0), (400, 600)], arcade.color.WHITE, 3)
         # arcade.draw_lines([(0, 200), (600, 200)], arcade.color.WHITE, 3)
         # arcade.draw_lines([(0, 400), (600, 400)], arcade.color.WHITE, 3)
 
     def get_location_clicked(self, x, y):
-        # Convert mouse coordinates to row col indexes for the board.
-        # Note: Coordinate (0;0) starts in bottom left corner in the arcade library.
-        # Note: it's necessary to flip y-axis in the calculation, otherwise the row index is flipped.
+        """ Convert clicked mouse coordinates to row and column indexes for the board grid.
+        Note: Coordinate (0,0) starts in bottom left corner in the arcade library. That's why we flip
+        the y-axis in the calculation. Otherwise the row index in the board is flipped. """
         col = floor(x / self.box_size)
         row = floor(abs(y-self.height) / self.box_size)
         return row, col
 
     def check_if_winner(self):
+        """ Check if there's a winner by checking if there are 3 same characters
+        on a horizontal, vertical or diagonal line and different from an empty box ('-'). """
         b = self.board
         # Check horizontal
         for h in range(3):
@@ -109,6 +118,7 @@ class MyGame(arcade.Window):
             return True
 
     def is_board_full(self):
+        """ Check if the board is completely filled in. """
         for row in range(3):
             for col in range(3):
                 if self.board[row][col] == '-':
@@ -116,7 +126,7 @@ class MyGame(arcade.Window):
         return True
 
     def is_game_done(self):
-        # Game is over if there's a winner or the board is full (= a tie).
+        """ Check if the game is over. The game is over if there's a winner of the board if full (= a tie). """
         if self.check_if_winner():
             print(f"Player {self.next_turn} won!")
             self.game_result = f"Player {self.next_turn} won!"
@@ -129,7 +139,7 @@ class MyGame(arcade.Window):
             return False
 
     def draw_start_menu(self):
-        self.get_center_locations(self.width, self.height)
+        """ Draw the start menu, so drawing a title and drawing instructions to start or exit the game. """
         arcade.draw_text("Tic Tac Toe",
                          0, 400, arcade.color.WHITE, 36, width=SCREEN_WIDTH, align="center")
         arcade.draw_text("Press ENTER to play.",
@@ -138,6 +148,7 @@ class MyGame(arcade.Window):
                          0, 150, arcade.color.WHITE, 14, width=SCREEN_WIDTH, align="center")
 
     def draw_game(self):
+        """ Draw the game, so draw the board grid and draw the X's and O's. """
         self.draw_board_grid(self.width, self.height)
         # Draw the X's.
         for x in self.x_list:
@@ -147,11 +158,14 @@ class MyGame(arcade.Window):
             o.draw()
 
     def draw_game_over(self):
+        """ Draw the game over screen, so drawing the game result (winner or tie), draw a smaller version
+        of the board grid with it's X's and O's in the center of the screen and drawing instructions to restart
+        or exit the game. """
         arcade.draw_text(self.game_result,
                          0, 450, arcade.color.WHITE, 36, width=SCREEN_WIDTH, align="center")
 
-        # Draw small board_grid in the center and draw the (small) X's & O's in the grid.
-        #arcade.draw_rectangle_filled(300, 300, 240, 240, arcade.color.DARK_GRAY)
+        # Draw small board_grid in the center and draw the (small) X's & O's in the grid. To place the grid,
+        # X's and O's in the center, an offset is used.
         BOARD_WIDTH_SMALL = 180
         BOARD_HEIGHT_SMALL = 180
         BOARD_OFFSET_SMALL = 210
@@ -179,8 +193,10 @@ class MyGame(arcade.Window):
                          0, 100, arcade.color.WHITE, 14, width=SCREEN_WIDTH, align="center")
 
     def on_draw(self):
-        arcade.start_render()
+        """ Render the screen. All drawing code goes here. """
+        arcade.start_render()  # Required to be called before drawing anything to the screen.
 
+        # Draw the menu, game, or game-over screen depending on the game state.
         if self.current_state == GAME_MENU:
             self.draw_start_menu()
         elif self.current_state == GAME_RUNNING:
@@ -192,6 +208,7 @@ class MyGame(arcade.Window):
         pass
 
     def on_key_release(self, symbol: int, modifiers: int):
+        """ Called when the user releases a key. """
         # Change game state when ENTER is pressed.
         if self.current_state == GAME_MENU and symbol == arcade.key.ENTER:
             self.current_state = GAME_RUNNING
@@ -206,16 +223,18 @@ class MyGame(arcade.Window):
             self.current_state = GAME_MENU
 
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int):
+        """ Called when left mouse button is pressed. """
         if self.current_state == GAME_RUNNING:
             if button == arcade.MOUSE_BUTTON_LEFT:
                 # Translate mouse coordinates to row, col indexes for the tic tac toe board.
                 row, col = self.get_location_clicked(x, y)
-                #print(f"({x},{y}) -> you clicked in row: {row}, col: {col}.")
 
                 # Add X or O to the correct board location if it's not filled.
                 if self.board[row][col] == 'X' or self.board[row][col] == 'O':
                     print("Box already filled! Please choose another location.")
                 else:
+                    # Fill an X or O in the board and add an X or O object in the list depending on the current turn.
+                    # The X and O lists are later used to draw them on the screen.
                     self.board[row][col] = self.current_turn
                     cx, cy = self.center_locations[row][col]
                     if self.current_turn == 'X':
@@ -225,8 +244,11 @@ class MyGame(arcade.Window):
                     self.switch_turn()
 
                 self.show_board_data()
+
                 if self.is_game_done():
                     self.current_state = GAME_OVER
+
+########################################################################################################################
 
 
 def menu():
@@ -269,7 +291,6 @@ def init_turns(players):
 
 
 def check_if_winner(b):
-    # todo: possible to code this more efficient by only check the rows/cols/diagonals of the last move.
     is_over = False
     # Check horizontal
     for h in range(3):
@@ -345,8 +366,8 @@ def tictactoe_gui():
 
 def main():
     while True:
-        #choice = menu()
-        choice = '1'  # quicker for development
+        choice = menu()
+        #choice = '1'  # quicker for gui development
 
         # Execute chosen menu option.
         if choice == '0':
