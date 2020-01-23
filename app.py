@@ -1,6 +1,6 @@
+from math import floor
 import arcade
 from Player import X, O
-from math import floor
 
 # Game settings
 SCREEN_WIDTH = 600
@@ -25,8 +25,9 @@ class MyGame(arcade.Window):
         self.next_turn = None
         self.x_list = None  # location of all X objects.
         self.o_list = None  # location of all O objects.
-        self.center_locations = None
+        self.center_locations = None  # center coordinates of all board locations.
 
+        # Set the start location of the window and its background color.
         self.set_location(100, 100)
         arcade.set_background_color(arcade.color.BLACK)
 
@@ -39,30 +40,56 @@ class MyGame(arcade.Window):
         self.players = ['X', 'O']
         self.current_turn = self.players[0]
         self.next_turn = self.players[1]
-        self.x_list = []  # location of all X objects.
-        self.o_list = []  # location of all O objects.
-        self.center_locations = [[(100, 500), (300, 500), (500, 500)],
-                                 [(100, 300), (300, 300), (500, 300)],
-                                 [(100, 100), (300, 100), (500, 100)]]
+        self.x_list = []
+        self.o_list = []
+        self.center_locations = self.get_center_locations(self.width, self.height)
+        # self.center_locations = [[(100, 500), (300, 500), (500, 500)],
+        #                          [(100, 300), (300, 300), (500, 300)],
+        #                          [(100, 100), (300, 100), (500, 100)]]
+
+    def get_center_locations(self, w, h):
+        box = int(w / 3)
+        half = int(box / 2)
+        center_locations = []  # List of list of tuples.
+
+        for row in range(w-half, half - 1, -box):
+            tmp = []
+            for col in range(half, w - half + 1, box):
+                tmp.append((col, row))
+            center_locations.append(tmp)
+        return center_locations
 
     def show_board_data(self):
         for row in self.board:
             print(f"|{row[0]}|{row[1]}|{row[2]}|")
+        print("")
 
     def switch_turn(self):
         self.current_turn, self.next_turn = self.next_turn, self.current_turn
 
-    def draw_board_grid(self):
-        # todo refactor this so it's in function of the width, height of the game.
-        arcade.draw_lines([(200, 0), (200, 600)], arcade.color.WHITE, 3)
-        arcade.draw_lines([(400, 0), (400, 600)], arcade.color.WHITE, 3)
-        arcade.draw_lines([(0, 200), (600, 200)], arcade.color.WHITE, 3)
-        arcade.draw_lines([(0, 400), (600, 400)], arcade.color.WHITE, 3)
+    def draw_board_grid(self, w, h, offset=0):
+        bs = w / 3
+        bs2 = bs * 2
+
+        # Add offset
+        w += offset
+        h += offset
+        bs += offset
+        bs2 += offset
+        arcade.draw_line(bs,     offset, bs,  h,   arcade.color.WHITE, 3)  # vertical line left
+        arcade.draw_line(bs2,    offset, bs2, h,   arcade.color.WHITE, 3)  # vertical line right
+        arcade.draw_line(offset, bs,     w,   bs,  arcade.color.WHITE, 3)  # horizontal line top
+        arcade.draw_line(offset, bs2,    w,   bs2, arcade.color.WHITE, 3)  # horizontal line bottom
+
+        # arcade.draw_lines([(200, 0), (200, 600)], arcade.color.WHITE, 3)
+        # arcade.draw_lines([(400, 0), (400, 600)], arcade.color.WHITE, 3)
+        # arcade.draw_lines([(0, 200), (600, 200)], arcade.color.WHITE, 3)
+        # arcade.draw_lines([(0, 400), (600, 400)], arcade.color.WHITE, 3)
 
     def get_location_clicked(self, x, y):
         # Convert mouse coordinates to row col indexes for the board.
         # Note: Coordinate (0;0) starts in bottom left corner in the arcade library.
-        # Note: it's nessecary to flip y-axis in the calculation, otherwise the row index is flipped.
+        # Note: it's necessary to flip y-axis in the calculation, otherwise the row index is flipped.
         col = floor(x / self.box_size)
         row = floor(abs(y-self.height) / self.box_size)
         return row, col
@@ -102,6 +129,7 @@ class MyGame(arcade.Window):
             return False
 
     def draw_start_menu(self):
+        self.get_center_locations(self.width, self.height)
         arcade.draw_text("Tic Tac Toe",
                          0, 400, arcade.color.WHITE, 36, width=SCREEN_WIDTH, align="center")
         arcade.draw_text("Press ENTER to play.",
@@ -110,7 +138,7 @@ class MyGame(arcade.Window):
                          0, 150, arcade.color.WHITE, 14, width=SCREEN_WIDTH, align="center")
 
     def draw_game(self):
-        self.draw_board_grid()
+        self.draw_board_grid(self.width, self.height)
         # Draw the X's.
         for x in self.x_list:
             x.draw()
@@ -119,14 +147,36 @@ class MyGame(arcade.Window):
             o.draw()
 
     def draw_game_over(self):
-        arcade.draw_text("Tic Tac Toe",
-                         0, 400, arcade.color.WHITE, 36, width=SCREEN_WIDTH, align="center")
         arcade.draw_text(self.game_result,
-                         0, 300, arcade.color.WHITE, 30, width=SCREEN_WIDTH, align="center")
+                         0, 450, arcade.color.WHITE, 36, width=SCREEN_WIDTH, align="center")
+
+        # Draw small board_grid in the center and draw the (small) X's & O's in the grid.
+        #arcade.draw_rectangle_filled(300, 300, 240, 240, arcade.color.DARK_GRAY)
+        BOARD_WIDTH_SMALL = 180
+        BOARD_HEIGHT_SMALL = 180
+        BOARD_OFFSET_SMALL = 210
+        self.draw_board_grid(BOARD_WIDTH_SMALL, BOARD_HEIGHT_SMALL, BOARD_OFFSET_SMALL)
+        locations = self.get_center_locations(BOARD_WIDTH_SMALL, BOARD_HEIGHT_SMALL)
+        for i, row in enumerate(self.board):
+            for j, col in enumerate(row):
+                cx, cy = locations[i][j]
+                cx += BOARD_OFFSET_SMALL
+                cy += BOARD_OFFSET_SMALL
+                if col == 'X':
+                    x = X(cx, cy)
+                    x.size = 20
+                    x.draw()
+                elif col == 'O':
+                    o = O(cx, cy)
+                    o.radius = 20
+                    o.draw()
+                else:
+                    continue
+
         arcade.draw_text("Press R to restart the game.",
-                         0, 200, arcade.color.WHITE, 14, width=SCREEN_WIDTH, align="center")
-        arcade.draw_text("Press ESC or Q at to exit the game.",
                          0, 150, arcade.color.WHITE, 14, width=SCREEN_WIDTH, align="center")
+        arcade.draw_text("Press ESC or Q to exit the game.",
+                         0, 100, arcade.color.WHITE, 14, width=SCREEN_WIDTH, align="center")
 
     def on_draw(self):
         arcade.start_render()
