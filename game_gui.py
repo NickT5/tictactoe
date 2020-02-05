@@ -25,6 +25,7 @@ class MyGame(arcade.Window):
         self.next_turn = None
         self.x_list = None  # location of all X objects.
         self.o_list = None  # location of all O objects.
+        self.winning_line = None
         self.center_locations = None  # center coordinates of all board locations.
 
         # Set the start location of the window and its background color.
@@ -42,6 +43,7 @@ class MyGame(arcade.Window):
         self.next_turn = self.players[1]
         self.x_list = []
         self.o_list = []
+        self.winning_line = None
         self.center_locations = self.get_center_locations(self.width, self.height)
         # self.center_locations = [[(100, 500), (300, 500), (500, 500)],
         #                          [(100, 300), (300, 300), (500, 300)],
@@ -93,6 +95,10 @@ class MyGame(arcade.Window):
         # arcade.draw_lines([(0, 200), (600, 200)], arcade.color.WHITE, 3)
         # arcade.draw_lines([(0, 400), (600, 400)], arcade.color.WHITE, 3)
 
+    def draw_winning_line(self):
+        pt1, pt2 = self.get_winning_line_loc()
+        arcade.draw_line(pt1[0], pt1[1], pt2[0], pt2[1], arcade.color.RED, 2)
+
     def get_location_clicked(self, x, y):
         """ Convert clicked mouse coordinates to row and column indexes for the board grid.
         Note: Coordinate (0,0) starts in bottom left corner in the arcade library. That's why we flip
@@ -101,6 +107,47 @@ class MyGame(arcade.Window):
         row = floor(abs(y-self.height) / self.box_size)
         return row, col
 
+    def get_winning_line_loc(self):
+        """ Get two point (x, y) coordinates the be able to draw the winning line.
+        [ 0  1  2
+          3  4  5
+          6  7  8]
+        """
+        box_index1, box_index2 = None, None
+        possibilities = {
+            "h0":  (0, 2),   # 1st horizontal row
+            "h1":  (3, 5),   # 2nd horizontal row
+            "h2":  (6, 8),   # 3rd horizontal row
+            "v0":  (0, 6),   # 1st vertical row
+            "v2":  (2, 8),   # 2nd vertical row
+            "v1":  (1, 7),   # 3rd vertical row
+            "dtlbr": (0, 8),   # diagonal row (top left to bottom right)
+            "dtrbl": (2, 6)    # diagonal row (top right to bottom left)
+        }
+        box_index1, box_index2 = possibilities[self.winning_line]
+
+        # Format 1D index to a 2D index so we can index the 2D center locations variable.
+        row1 = box_index1 // 3
+        col1 = box_index1 % 3
+        row2 = box_index2 // 3
+        col2 = box_index2 % 3
+
+        # Get the two point coordinates needed to draw the winning line.
+        BOARD_WIDTH_SMALL = 180
+        BOARD_HEIGHT_SMALL = 180
+        center_locations = self.get_center_locations(BOARD_WIDTH_SMALL, BOARD_HEIGHT_SMALL)
+        x1, y1 = center_locations[row1][col1]
+        x2, y2 = center_locations[row2][col2]
+
+        # Add offset to the two point coordinates.
+        BOARD_OFFSET_SMALL = 210
+        x1 += BOARD_OFFSET_SMALL
+        y1 += BOARD_OFFSET_SMALL
+        x2 += BOARD_OFFSET_SMALL
+        y2 += BOARD_OFFSET_SMALL
+
+        return (x1, y1), (x2, y2)
+
     def check_if_winner(self):
         """ Check if there's a winner by checking if there are 3 same characters
         on a horizontal, vertical or diagonal line and different from an empty box ('-'). """
@@ -108,13 +155,20 @@ class MyGame(arcade.Window):
         # Check horizontal
         for h in range(3):
             if b[h][0] == b[h][1] == b[h][2] and b[h][0] != '-':
+                self.winning_line = f"h{h}"  # h0, h1 or h2
                 return True
         # Check vertical
         for v in range(3):
             if b[0][v] == b[1][v] == b[2][v] and b[0][v] != '-':
+                self.winning_line = f"v{v}"  # v0, v1 or v2
                 return True
-        # Check diagonal
-        if (b[0][0] == b[1][1] == b[2][2] and b[0][0] != '-') or (b[2][0] == b[1][1] == b[0][2] and b[2][0] != '-'):
+        # Check diagonal top left to bottom right
+        if b[0][0] == b[1][1] == b[2][2] and b[0][0] != '-':
+            self.winning_line = "dtlbr"
+            return True
+        # Check diagonal top right to bottom left
+        if b[2][0] == b[1][1] == b[0][2] and b[2][0] != '-':
+            self.winning_line = "dtrbl"
             return True
 
     def is_board_full(self):
@@ -186,6 +240,9 @@ class MyGame(arcade.Window):
                     o.draw()
                 else:
                     continue
+
+        if self.winning_line is not None:
+            self.draw_winning_line()
 
         arcade.draw_text("Press R to restart the game.",
                          0, 150, arcade.color.WHITE, 14, width=SCREEN_WIDTH, align="center")
