@@ -20,8 +20,13 @@ python app.py
 ```
 
 ## Demo
-![Tic Tac Toe demo gui](demo/demo_gui_small.gif)
+- Demo: Tic Tac Toe with GUI version.
+![Tic Tac Toe demo gui](demo/demo_gui.gif)
+
+- Demo: Tic Tac Toe with menu & CLI version.
 ![Tic Tac Toe demo menu](demo/demo_menu_w_cli.gif)
+
+- Demo screenshot: Ending of a Tic Tac Toe CLI game.
 ![Tic Tac Toe demo cli](demo/demo_cli.png)
 
 
